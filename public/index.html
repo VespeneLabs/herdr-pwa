@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>Herdr Agents</title>
+  <meta name="theme-color" content="#f6f5f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#17171a" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Herdr">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <!-- Login -->
+  <section id="login" class="screen" hidden>
+    <div class="login-card">
+      <h1>Herdr</h1>
+      <p>Paste the token from your Mac.<br><span class="dim">Run <code>npm run token</code> in herdr-pwa.</span></p>
+      <form id="login-form">
+        <input id="token-input" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Token" required>
+        <button type="submit" class="primary">Connect</button>
+      </form>
+      <p id="login-error" class="error" hidden></p>
+    </div>
+  </section>
+
+  <!-- List -->
+  <section id="list" class="screen" hidden>
+    <header class="bar">
+      <h1>Agents</h1>
+      <span id="conn" class="conn" title="Connection"></span>
+      <button id="menu-btn" class="icon-btn" aria-label="Settings">⋯</button>
+    </header>
+    <div id="menu" class="menu" hidden>
+      <button id="notify-btn">Turn on notifications</button>
+      <button id="test-btn" hidden>Send a test notification</button>
+      <button id="logout-btn" class="danger">Forget token</button>
+      <p id="menu-note" class="dim small"></p>
+    </div>
+    <main id="groups" class="groups"></main>
+  </section>
+
+  <!-- Detail -->
+  <section id="detail" class="screen" hidden>
+    <header class="bar">
+      <button id="back-btn" class="icon-btn" aria-label="Back">‹</button>
+      <div class="title-wrap">
+        <h2 id="d-title"></h2>
+        <div id="d-sub" class="dim small"></div>
+      </div>
+      <button id="wrap-btn" class="icon-btn" aria-label="Toggle line wrap" title="Wrap lines">↩</button>
+    </header>
+    <div id="d-status" class="status-line"></div>
+    <pre id="screen" class="screen-text wrap"></pre>
+    <footer class="composer">
+      <div class="keys" id="keys">
+        <button data-key="esc">Esc</button>
+        <button data-key="enter">⏎</button>
+        <button data-key="up">↑</button>
+        <button data-key="down">↓</button>
+        <button data-key="tab">Tab</button>
+        <button data-key="shift+tab">⇧Tab</button>
+        <button data-key="1">1</button>
+        <button data-key="2">2</button>
+        <button data-key="3">3</button>
+        <button id="interrupt-btn" class="danger">Stop</button>
+      </div>
+      <form id="send-form" class="send-row">
+        <textarea id="msg" rows="1" placeholder="Message" enterkeyhint="send"></textarea>
+        <button type="submit" class="primary" id="send-btn" aria-label="Send">↑</button>
+      </form>
+    </footer>
+  </section>
+
+  <div id="toast" class="toast" hidden></div>
+</body>
+</html>
