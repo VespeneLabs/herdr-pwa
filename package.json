@@ -9,7 +9,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "token": "node server.js --print-url"
+    "token": "node server.js --print-url",
+    "demo": "DEMO=1 PORT=7691 node server.js"
   },
   "engines": { "node": ">=20" },
   "dependencies": {

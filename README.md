@@ -7,6 +7,14 @@ home-screen web app. Check which agents need you, read what they did, reply,
 answer a permission prompt or stop one, from the couch, without opening a
 laptop. No account, no cloud, no relay: your phone talks to your own machine.
 
+<p align="center">
+  <img src="docs/screenshots/list-dark.png" alt="Agent list in dark mode: one agent needing a permission answer, two done, two working with a sub-agent, one idle" width="260">
+  <img src="docs/screenshots/agent-dark.png" alt="An agent's screen in dark mode, waiting at a permission prompt, with the key bar and reply box below" width="260">
+  <img src="docs/screenshots/list-light.png" alt="Agent list in light mode" width="260">
+  <br>
+  <sub>Demo data from <code>npm run demo</code>.</sub>
+</p>
+
 > Unofficial. Not affiliated with Herdr. Built for the Herdr desktop app
 > (`herdr-app`) and herdr-core (`hc`).
 
@@ -62,6 +70,10 @@ npm install
 npm start          # listens on 127.0.0.1:7690
 npm run token      # prints the token the phone asks for
 ```
+
+Just want to look around first? `npm run demo` serves made-up agents on
+<http://127.0.0.1:7691/#token=demo>, no Herdr needed. Replies and keys are
+accepted and ignored.
 
 Then reach it from your phone in one of two ways.
 
@@ -153,7 +165,9 @@ maintainers privately first.
 
 ```
 server.js                    HTTP server, hc events follower, Web Push
+demo.js                      made-up agents for `npm run demo`
 public/                      the web app (plain HTML/CSS/JS, no build step)
+docs/screenshots/            README images
 scripts/install-launchagent.sh
 ```
 

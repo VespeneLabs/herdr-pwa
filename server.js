@@ -32,7 +32,11 @@ function findHc() {
 }
 const HC = findHc();
 
+// DEMO=1: made-up agents from demo.js, token "demo", no herdr-core needed.
+const DEMO = process.env.DEMO === "1" ? await import("./demo.js") : null;
+
 function hc(args, { timeout = 15000 } = {}) {
+  if (DEMO) return DEMO.hc(args);
   return new Promise((resolve, reject) => {
     execFile(HC, args, { timeout, maxBuffer: 8 * 1024 * 1024, env: { ...process.env, NO_COLOR: "1" } },
       (err, stdout, stderr) => {
@@ -55,7 +59,7 @@ function readOrCreate(file, make, mode = 0o600) {
   return v;
 }
 
-const TOKEN = readOrCreate("token", () => crypto.randomBytes(24).toString("base64url")).trim();
+const TOKEN = DEMO ? "demo" : readOrCreate("token", () => crypto.randomBytes(24).toString("base64url")).trim();
 
 if (process.argv.includes("--print-url")) {
   console.log(`Token: ${TOKEN}`);
@@ -375,7 +379,11 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-startEvents();
+if (DEMO) {
+  for (const t of DEMO.terminals) terminals.set(t.address, t);
+} else {
+  startEvents();
+}
 server.listen(PORT, HOST, () => {
   console.log(`herdr-pwa on http://${HOST}:${PORT}  (hc: ${HC}, push: ${webpush ? "on" : "off"})`);
   console.log(`token: run \`npm run token\` to print it`);

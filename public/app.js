@@ -341,9 +341,10 @@ async function login(token) {
 function boot() {
   document.body.addEventListener("touchstart", () => {}, { passive: true }); // :active on iOS
 
-  const fromHash = location.hash.match(/^#token=([\w-]+)$/);
+  // #token=X logs in; #token=X&t=t4 also opens that agent.
+  const fromHash = location.hash.match(/^#token=([\w-]+)(?:&t=([\w/.-]+))?$/);
   if (fromHash) {
-    history.replaceState(null, "", location.pathname);
+    history.replaceState(null, "", location.pathname + (fromHash[2] ? `#t=${fromHash[2]}` : ""));
     state.token = fromHash[1];
   }
 
