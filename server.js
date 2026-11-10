@@ -33,6 +33,7 @@ function findHc() {
 const HC = findHc();
 
 // DEMO=1: made-up agents from demo.js, token "demo", no herdr-core needed.
+const DEBUG = process.env.DEBUG === "1";
 const DEMO = process.env.DEMO === "1" ? await import("./demo.js") : null;
 
 function hc(args, { timeout = 15000 } = {}) {
@@ -170,8 +171,25 @@ function onChange(prev, next) {
   });
 }
 
+let eventsChild = null;
+
+// Safety net: compare with `hc ls` now and then; if the live set or a status
+// differs, restart the event stream, which starts with a fresh full snapshot.
+async function reconcile() {
+  let core;
+  try { core = JSON.parse(await hc(["ls", "--json"])).terminals || []; } catch { return; }
+  const ours = new Map(snapshot().map((v) => [v.address, v]));
+  const missing = core.filter((t) => !ours.has(t.address)).map((t) => t.address);
+  const extra = [...ours.keys()].filter((a) => !core.some((t) => t.address === a));
+  const stale = core.filter((t) => ours.has(t.address) && (t.status ?? null) !== ours.get(t.address).status).map((t) => t.address);
+  if (!missing.length && !extra.length && !stale.length) return;
+  console.warn(`[reconcile] out of sync (missing: ${missing.join(" ") || "-"}; extra: ${extra.join(" ") || "-"}; stale: ${stale.join(" ") || "-"}); resyncing`);
+  eventsChild?.kill();
+}
+
 function startEvents() {
   const child = spawn(HC, ["events", "--json"], { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, NO_COLOR: "1" } });
+  eventsChild = child;
   const rl = readline.createInterface({ input: child.stdout });
   rl.on("line", (line) => {
     let msg;
@@ -179,14 +197,19 @@ function startEvents() {
     const snap = msg.terminals || msg.params?.terminals || msg.result?.terminals;
     if (Array.isArray(snap)) {
       // a snapshot (the first line, or after "missed"): replace without notifying
+      if (DEBUG) console.log(`[events] snapshot: ${snap.length} terminals, ${snap.filter((t) => t.state === "live").length} live; keys: ${Object.keys(msg).join(",")}`);
       terminals.clear();
       for (const t of snap) terminals.set(t.address, t);
       scheduleBroadcast();
       return;
     }
     // Changes: {"method":"event","params":{"terminal":"t1c","type":"status","data":{...}}}
-    if (msg.method !== "event" || !msg.params?.terminal) return; // heartbeat, missed, ...
+    if (msg.method !== "event" || !msg.params?.terminal) {
+      if (DEBUG && msg.method !== "heartbeat") console.log(`[events] other: ${line.slice(0, 300)}`);
+      return; // heartbeat, missed, ...
+    }
     const { terminal: addr, type, data = {} } = msg.params;
+    if (DEBUG && type !== "status") console.log(`[events] ${type} ${addr}: ${JSON.stringify(data).slice(0, 300)}`);
     if (type === "removed") {
       terminals.delete(addr);
       scheduleBroadcast();
@@ -210,9 +233,9 @@ function startEvents() {
     scheduleBroadcast();
   });
   child.stderr.on("data", (d) => console.warn("hc events:", d.toString().trim()));
-  child.on("exit", (code) => {
-    console.warn(`hc events exited (${code}); restarting in 2s`);
-    setTimeout(startEvents, 2000);
+  child.on("exit", (code, signal) => {
+    console.warn(`hc events exited (${code ?? signal}); restarting in ${signal ? "0" : "2"}s`);
+    setTimeout(startEvents, signal ? 0 : 2000);
   });
 }
 
@@ -383,6 +406,7 @@ if (DEMO) {
   for (const t of DEMO.terminals) terminals.set(t.address, t);
 } else {
   startEvents();
+  setInterval(reconcile, 30_000);
 }
 server.listen(PORT, HOST, () => {
   console.log(`herdr-pwa on http://${HOST}:${PORT}  (hc: ${HC}, push: ${webpush ? "on" : "off"})`);
